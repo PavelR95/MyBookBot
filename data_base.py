@@ -16,12 +16,12 @@ class DataBae:
         con = await self.connect()
         await con.execute(
             'CREATE TABLE IF NOT EXISTS users '
-            '(user_id text, user_name text, last_command text)'
+            '(user_id text PRIMARY KEY, user_name text, last_command text)'
         )
         await con.commit()
         await con.execute(
             'CREATE TABLE IF NOT EXISTS reminder '
-            '(user_id text, date text, tusk text)'
+            '(id_reminder int PRIMARY KEY, user_id text, date text, reminder text)'
         )
         await con.commit()
         await con.close()
@@ -48,7 +48,14 @@ class DataBae:
 
     async def add_reminder(self, reminder):
         con = await self.connect()
-        await con.execute('INSERT INTO reminder VALUES (?, ?, ?)', reminder)
+        cur = await con.execute("SELECT MAX(id_reminder) FROM reminder")
+        data = await cur.fetchone()
+        await cur.close()
+        if data[0] is None:
+            value = (1, reminder[0], reminder[1], reminder[2])
+        else:
+            value = (data[0]+1, reminder[0], reminder[1], reminder[2])
+        await con.execute('INSERT INTO reminder VALUES (?, ?, ?, ?)', value)
         await con.commit()
         await con.close()
 
